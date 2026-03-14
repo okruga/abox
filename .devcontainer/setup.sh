@@ -85,12 +85,4 @@ done
 log "Applying preview/..."
 kubectl apply -f preview/
 
-# Create GitHub auth secret for ResourceSetInputProvider
-log "Creating github-auth secret in app-preview..."
-kubectl create secret generic github-auth \
-  --from-literal=username=git \
-  --from-literal=password="${TF_VAR_github_token}" \
-  -n app-preview \
-  --dry-run=client -o yaml | kubectl apply -f -
-
 log "=== setup complete ==="
