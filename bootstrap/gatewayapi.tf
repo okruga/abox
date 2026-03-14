@@ -23,17 +23,18 @@ resource "null_resource" "wait_for_gateway_api_crds" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      echo "Waiting for Gateway API CRDs..."
+      echo "Waiting for agentgateway-crds HelmRelease to be ready..."
       until kubectl \
         --server="$SERVER" \
         --client-certificate=<(echo "$CLIENT_CERT") \
         --client-key=<(echo "$CLIENT_KEY") \
         --certificate-authority=<(echo "$CA_CERT") \
-        get crd gateways.gateway.networking.k8s.io >/dev/null 2>&1; do
+        get helmrelease agentgateway-crds -n flux-system \
+        -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null | grep -q "True"; do
         echo "  not ready yet, retrying in 5s..."
         sleep 5
       done
-      echo "Gateway API CRDs ready."
+      echo "agentgateway-crds HelmRelease ready."
     EOT
     interpreter = ["/bin/bash", "-c"]
     environment = {
