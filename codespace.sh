@@ -59,4 +59,8 @@ kubectl apply --kubeconfig /home/codespace/.kube/config --server-side -f https:/
 log "Applying gatewayapi/Gateway.yaml..."
 kubectl apply --kubeconfig /home/codespace/.kube/config -f gatewayapi/Gateway.yaml
 
+
+helm install kagent-crd oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds --create-namespace -n kagent
+helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent --create-namespace  -n kagent --set querydoc.enabled=0,cilium-policy-agent.enabled=0,cilium-manager-agent.enabled=0,cilium-debug-agent.enabled=0,promql-agent.enabled=0,istio-agent.enabled=0,istio-policy-agent.enabled=0,istio-manager-agent.enabled=0
+
 log "=== setup complete ==="
