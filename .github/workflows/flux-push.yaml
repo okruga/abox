@@ -35,7 +35,7 @@ jobs:
         id: version
         run: |
           TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          COMMITS=$(git rev-list ${TAG}..HEAD --count)
+          COMMITS=$(git rev-list ${TAG}..HEAD --count 2>/dev/null || git rev-list HEAD --count)
           SEMVER="${TAG#v}"
           if [[ "$COMMITS" -gt 0 ]]; then
             SEMVER="${SEMVER}-${COMMITS}-g$(git rev-parse --short HEAD)"
