@@ -44,6 +44,10 @@ fi
 
 cd ..
 
+# Install Gateway API CRDs (required by agentgateway)
+log "Installing Gateway API CRDs..."
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
+
 # Install GatewayClass + Gateway
 log "Applying gatewayapi/..."
 kubectl apply -f gatewayapi/
@@ -65,8 +69,8 @@ kubectl apply -f release/
 # Wait for LoadBalancer IP
 log "Waiting for LoadBalancer IP..."
 for i in $(seq 1 30); do
-  LB_IP=$(kubectl get svc -n envoy-gateway-system \
-    -o jsonpath='{.items[?(@.metadata.name matches "envoy-envoy-gateway.*")].status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+  LB_IP=$(kubectl get svc -n agentgateway-system \
+    -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
   if [[ -n "$LB_IP" ]]; then
     log "LoadBalancer IP: $LB_IP"
     break

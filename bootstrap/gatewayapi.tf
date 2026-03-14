@@ -1,12 +1,21 @@
 # ==========================================
-# Bootstrap Envoy Gateway
+# Bootstrap Agentgateway
 # ==========================================
-resource "helm_release" "envoy_gateway" {
+resource "helm_release" "agentgateway_crds" {
   depends_on       = [kind_cluster.this]
-  name             = "eg"
-  namespace        = "envoy-gateway-system"
-  repository       = "oci://docker.io/envoyproxy"
-  chart            = "gateway-helm"
-  version          = "v1.3.2"
+  name             = "agentgateway-crds"
+  namespace        = "agentgateway-system"
+  repository       = "oci://ghcr.io/kgateway-dev/charts"
+  chart            = "agentgateway-crds"
+  version          = "v2.2.1"
   create_namespace = true
+}
+
+resource "helm_release" "agentgateway" {
+  depends_on = [helm_release.agentgateway_crds]
+  name       = "agentgateway"
+  namespace  = "agentgateway-system"
+  repository = "oci://ghcr.io/kgateway-dev/charts"
+  chart      = "agentgateway"
+  version    = "v2.2.1"
 }
