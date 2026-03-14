@@ -13,11 +13,10 @@ Local Kubernetes environment using KinD, Flux CD, and kgateway (agentgateway). G
 ## Quickstart
 
 ```bash
-# In a GitHub Codespace or Linux machine:
 make run
 ```
 
-This installs OpenTofu and K9s, provisions the KinD cluster, bootstraps Flux, and starts cloud-provider-kind.
+Installs OpenTofu and K9s, provisions the KinD cluster, bootstraps Flux, starts cloud-provider-kind.
 
 ## How it works
 
@@ -26,35 +25,35 @@ make run  →  scripts/setup.sh
   → tofu apply (bootstrap/)
       → KinD cluster
       → helm: flux-operator
-      → helm: flux-instance  (wait=true)
-      → helm: flux-config       ← installs ResourceSetInputProvider + ResourceSet
-          → RSIP polls oci://ghcr.io/den-vasyliev/a-box/releases (semver tags)
-          → ResourceSet creates OCIRepository + Kustomization
+      → helm: flux-instance        (wait=true)
+      → kubernetes_manifest: RSIP  (depends_on flux-instance)
+          polls oci://ghcr.io/den-vasyliev/a-box/releases
+          filter: semver tags only  ^\d+\.\d+\.\d+$
+      → kubernetes_manifest: ResourceSet  (depends_on RSIP)
+          creates OCIRepository + Kustomization per tag
               → releases/ OCI artifact reconciled:
                   kgateway-crds.yaml  → kgateway-crds HelmRelease (Gateway API CRDs)
-                  kgateway.yaml       → kgateway HelmRelease (dependsOn crds)
-                                      → GatewayClass + Gateway
+                  kgateway.yaml       → kgateway HelmRelease + GatewayClass + Gateway
                   kagent-crds.yaml    → kagent-crds HelmRelease
-                  kagent.yaml         → kagent HelmRelease (dependsOn crds)
+                  kagent.yaml         → kagent HelmRelease
 ```
 
-## CI/CD
+## Releasing
 
-Pushing to `main` (or tagging `v*`) triggers `.github/workflows/flux-push.yaml`:
-- Pushes `releases/` as OCI artifact to `ghcr.io/den-vasyliev/a-box/releases`
-- Packages and pushes `charts/flux-config` Helm chart to `ghcr.io/den-vasyliev/a-box`
+Push a semver tag to trigger the CI workflow, which publishes a new OCI artifact. RSIP picks it up and Flux reconciles automatically.
 
-RSIP picks up the new semver tag and Flux reconciles automatically — no git write-back.
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
 
 ## Directory Layout
 
 | Path | Purpose |
 |------|---------|
-| `bootstrap/` | OpenTofu: KinD cluster + Flux bootstrap |
-| `charts/flux-config/` | Helm chart: bootstraps RSIP + ResourceSet |
+| `bootstrap/` | OpenTofu: KinD cluster + Flux bootstrap (operator, instance, RSIP, ResourceSet) |
 | `releases/` | OCI artifact contents: Flux manifests for kgateway + kagent |
 | `scripts/setup.sh` | Full setup script (called by `make run`) |
-| `.github/workflows/` | CI: push OCI artifact + Helm chart on merge |
+| `.github/workflows/flux-push.yaml` | CI: push `releases/` as OCI artifact on `v*` tags |
 
 ## Verify
 
