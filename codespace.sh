@@ -46,9 +46,9 @@ log "Installing cloud-provider-kind..."
 ARCH=$(dpkg --print-architecture)
 wget -q "https://github.com/kubernetes-sigs/cloud-provider-kind/releases/download/v0.6.0/cloud-provider-kind_0.6.0_linux_${ARCH}.tar.gz" \
   -O /tmp/cloud-provider-kind.tar.gz
-tar -xzf /tmp/cloud-provider-kind.tar.gz -C /usr/local/bin cloud-provider-kind
+tar -xzf /tmp/cloud-provider-kind.tar.gz -C /tmp cloud-provider-kind
 rm /tmp/cloud-provider-kind.tar.gz
-nohup cloud-provider-kind > /tmp/cloud-provider-kind.log 2>&1 &
+nohup /tmp/cloud-provider-kind > /tmp/cloud-provider-kind.log 2>&1 &
 log "cloud-provider-kind started (pid $!)"
 
 # Apply GatewayClass + Gateway
@@ -56,7 +56,10 @@ log "Applying gatewayapi/Gateway.yaml..."
 kubectl apply --kubeconfig /home/codespace/.kube/config -f gatewayapi/Gateway.yaml
 
 
-helm install kagent-crd oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds --create-namespace -n kagent
-helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent --create-namespace  -n kagent --set querydoc.enabled=0,cilium-policy-agent.enabled=0,cilium-manager-agent.enabled=0,cilium-debug-agent.enabled=0,promql-agent.enabled=0,istio-agent.enabled=0,istio-policy-agent.enabled=0,istio-manager-agent.enabled=0
+helm upgrade -i kagent-crd oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds --create-namespace -n kagent
+helm upgrade -i kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent --create-namespace  -n kagent \
+--set tools.querydoc.enabled=false --set agents.cilium-policy-agent.enabled=false --set agents.cilium-manager-agent.enabled=false  \
+--set agents.cilium-debug-agent.enabled=false --set agents.promql-agent.enabled=false --set agents.istio-agent.enabled=false \
+--set agents.istio-policy-agent.enabled=false --set agents.istio-manager-agent.enabled=false --set providers.openAI.apiKey=OPENAI_API_KEY
 
 log "=== setup complete ==="
