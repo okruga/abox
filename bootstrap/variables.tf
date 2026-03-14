@@ -3,3 +3,9 @@ variable "cluster_name" {
   type        = string
   default     = "preview"
 }
+
+variable "oci_registry" {
+  description = "OCI registry URL for Flux config helm chart"
+  type        = string
+  default     = "oci://ghcr.io/den-vasyliev/a-box"
+}

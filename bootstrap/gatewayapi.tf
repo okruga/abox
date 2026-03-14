@@ -6,7 +6,7 @@ resource "helm_release" "flux_config" {
 
   name       = "flux-config"
   namespace  = "flux-system"
-  repository = "oci://ghcr.io/den-vasyliev"
+  repository = var.oci_registry
   chart      = "flux-config"
   version    = "0.1.0"
 }

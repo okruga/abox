@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'flux-config/**'
+      - 'charts/flux-config/**'
       - '.github/workflows/flux-push.yaml'
     tags:
       - 'v*'
@@ -60,3 +61,8 @@ jobs:
             oci://ghcr.io/${{ github.repository }}/flux-config:${{ steps.version.outputs.tag }}@${{ steps.push.outputs.digest }} \
             --tag ${{ steps.version.outputs.tag_ts }} \
             --tag latest
+
+      - name: Push Helm chart
+        run: |
+          helm package charts/flux-config
+          helm push flux-config-*.tgz oci://ghcr.io/${{ github.repository }}
