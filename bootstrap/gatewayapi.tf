@@ -25,7 +25,7 @@ resource "null_resource" "wait_for_gateway_api_crds" {
     command = <<-EOT
       echo "Waiting for Gateway API CRDs..."
       until kubectl \
-        --server="${SERVER}" \
+        --server="$SERVER" \
         --client-certificate=<(echo "$CLIENT_CERT") \
         --client-key=<(echo "$CLIENT_KEY") \
         --certificate-authority=<(echo "$CA_CERT") \
