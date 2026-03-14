@@ -38,7 +38,6 @@ tofu apply -auto-approve
 log "tofu apply done"
 
 export KUBECONFIG=~/.kube/config
-kind export kubeconfig --name preview
 
 cd ..
 
