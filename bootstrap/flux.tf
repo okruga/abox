@@ -28,3 +28,16 @@ resource "helm_release" "flux_instance" {
     value = "=2.x"
   }
 }
+
+# ==========================================
+# Bootstrap Flux config via OCI artifact
+# ==========================================
+resource "helm_release" "flux_config" {
+  depends_on = [helm_release.flux_instance]
+
+  name       = "flux-config"
+  namespace  = "flux-system"
+  repository = var.oci_registry
+  chart      = "flux-config"
+  version    = "0.1.0"
+}
