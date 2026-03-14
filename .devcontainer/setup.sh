@@ -1,11 +1,22 @@
 #!/bin/bash
 set -euo pipefail
 
+LOG=/tmp/setup.log
+exec > >(tee -a "$LOG") 2>&1
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+log "=== k8sdiy-env setup start ==="
+
 # Install OpenTofu
+log "Installing OpenTofu..."
 curl -fsSL https://get.opentofu.org/install-opentofu.sh | sh -s -- --install-method standalone
+log "OpenTofu $(tofu version -json | grep -o '"tofu_version":"[^"]*"' | cut -d'"' -f4) installed"
 
 # Install K9s
+log "Installing K9s..."
 curl -sS https://webi.sh/k9s | sh
+log "K9s installed"
 
 # Add aliases to bashrc
 cat >> ~/.bashrc <<'EOF'
@@ -17,57 +28,67 @@ alias k=kubectl
 EOF
 
 # Initialize Tofu
+log "Running tofu init..."
 cd bootstrap
 tofu init
+log "tofu init done"
 
 # Apply if token is available
 if [[ -n "${TF_VAR_github_token:-}" ]]; then
+  log "Running tofu apply..."
   tofu apply -auto-approve
+  log "tofu apply done"
 else
-  echo "WARNING: GITHUB_TOKEN secret not set — skipping tofu apply"
-  echo "Set it via Codespace secrets and rebuild, or run: tofu apply"
+  log "WARNING: GITHUB_TOKEN secret not set — skipping tofu apply"
 fi
 
 cd ..
 
 # Install GatewayClass + Gateway
+log "Applying gatewayapi/..."
 kubectl apply -f gatewayapi/
 
 # Install cloud-provider-kind (LoadBalancer support)
+log "Installing cloud-provider-kind..."
 ARCH=$(dpkg --print-architecture)
 wget -q "https://github.com/kubernetes-sigs/cloud-provider-kind/releases/download/v0.6.0/cloud-provider-kind_0.6.0_linux_${ARCH}.tar.gz" \
   -O /tmp/cloud-provider-kind.tar.gz
 tar -xzf /tmp/cloud-provider-kind.tar.gz -C /usr/local/bin cloud-provider-kind
 rm /tmp/cloud-provider-kind.tar.gz
 nohup cloud-provider-kind > /tmp/cloud-provider-kind.log 2>&1 &
+log "cloud-provider-kind started (pid $!)"
 
 # Install production HelmRelease
+log "Applying release/..."
 kubectl apply -f release/
 
-# Get LoadBalancer IP
-echo "Waiting for LoadBalancer IP..."
+# Wait for LoadBalancer IP
+log "Waiting for LoadBalancer IP..."
 for i in $(seq 1 30); do
   LB_IP=$(kubectl get svc -n envoy-gateway-system \
     -o jsonpath='{.items[?(@.metadata.name matches "envoy-envoy-gateway.*")].status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
   if [[ -n "$LB_IP" ]]; then
-    echo "LoadBalancer IP: $LB_IP"
+    log "LoadBalancer IP: $LB_IP"
     break
   fi
+  log "Attempt $i/30 — not ready yet, retrying in 5s..."
   sleep 5
 done
 
 # Install preview ResourceSet manifests
+log "Applying preview/..."
 kubectl apply -f preview/
 
 # Create GitHub auth secret for ResourceSetInputProvider
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  log "Creating github-auth secret in app-preview..."
   kubectl create secret generic github-auth \
     --from-literal=username=git \
     --from-literal=password="${GITHUB_TOKEN}" \
     -n app-preview \
     --dry-run=client -o yaml | kubectl apply -f -
 else
-  echo "WARNING: GITHUB_TOKEN not set — skipping github-auth secret creation"
+  log "WARNING: GITHUB_TOKEN not set — skipping github-auth secret creation"
 fi
 
-echo "Setup complete."
+log "=== setup complete === (log: $LOG)"
