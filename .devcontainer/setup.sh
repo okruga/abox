@@ -11,7 +11,7 @@ log "=== k8sdiy-env setup start ==="
 # Install OpenTofu
 log "Installing OpenTofu..."
 curl -fsSL https://get.opentofu.org/install-opentofu.sh | sh -s -- --install-method standalone
-log "OpenTofu $(tofu version -json | grep -o '"tofu_version":"[^"]*"' | cut -d'"' -f4) installed"
+log "OpenTofu installed"
 
 # Install K9s
 log "Installing K9s..."
@@ -33,14 +33,16 @@ cd bootstrap
 tofu init
 log "tofu init done"
 
-# Apply if token is available
-if [[ -n "${TF_VAR_github_token:-}" ]]; then
-  log "Running tofu apply..."
-  tofu apply -auto-approve
-  log "tofu apply done"
-else
-  log "WARNING: GITHUB_TOKEN secret not set — skipping tofu apply"
+# Apply — requires GITHUB_TOKEN codespace secret
+if [[ -z "${TF_VAR_github_token:-}" ]]; then
+  log "ERROR: GITHUB_TOKEN secret not set — cannot provision cluster"
+  log "Set it at: github.com/settings/codespaces -> Secrets"
+  exit 1
 fi
+
+log "Running tofu apply..."
+tofu apply -auto-approve
+log "tofu apply done"
 
 cd ..
 
@@ -84,15 +86,11 @@ log "Applying preview/..."
 kubectl apply -f preview/
 
 # Create GitHub auth secret for ResourceSetInputProvider
-if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-  log "Creating github-auth secret in app-preview..."
-  kubectl create secret generic github-auth \
-    --from-literal=username=git \
-    --from-literal=password="${GITHUB_TOKEN}" \
-    -n app-preview \
-    --dry-run=client -o yaml | kubectl apply -f -
-else
-  log "WARNING: GITHUB_TOKEN not set — skipping github-auth secret creation"
-fi
+log "Creating github-auth secret in app-preview..."
+kubectl create secret generic github-auth \
+  --from-literal=username=git \
+  --from-literal=password="${GITHUB_TOKEN}" \
+  -n app-preview \
+  --dry-run=client -o yaml | kubectl apply -f -
 
-log "=== setup complete === (log: $LOG)"
+log "=== setup complete ==="
