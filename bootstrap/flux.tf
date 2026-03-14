@@ -21,6 +21,8 @@ resource "helm_release" "flux_instance" {
   namespace  = "flux-system"
   repository = "oci://ghcr.io/controlplaneio-fluxcd/charts"
   chart      = "flux-instance"
+  wait       = true
+
   set {
     name  = "distribution.version"
     value = "=2.x"
