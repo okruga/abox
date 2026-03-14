@@ -1,0 +1,43 @@
+{
+  "name": "k8sdiy-env",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true
+    }
+  },
+
+  "secrets": {
+    "GITHUB_TOKEN": {
+      "description": "GitHub personal access token for Flux bootstrap and ResourceSetInputProvider"
+    }
+  },
+
+  "remoteEnv": {
+    "TF_VAR_github_token": "${localEnv:GITHUB_TOKEN}"
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hashicorp.terraform",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "weaveworks.vscode-gitops-tools"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  "forwardPorts": [80],
+  "portsAttributes": {
+    "80": {
+      "label": "Envoy Gateway",
+      "onAutoForward": "notify"
+    }
+  }
+}
