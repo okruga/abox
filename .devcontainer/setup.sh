@@ -57,10 +57,6 @@ rm /tmp/cloud-provider-kind.tar.gz
 nohup cloud-provider-kind > /tmp/cloud-provider-kind.log 2>&1 &
 log "cloud-provider-kind started (pid $!)"
 
-# Install production HelmRelease
-log "Applying release/..."
-kubectl apply -f release/
-
 # Wait for LoadBalancer IP
 log "Waiting for LoadBalancer IP..."
 for i in $(seq 1 30); do
