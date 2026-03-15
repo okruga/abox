@@ -1,23 +1,26 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: OCIRepository
 metadata:
-  name: kgateway-crds
+  name: agentgateway-crds
   namespace: flux-system
 spec:
   interval: 1h
-  url: oci://ghcr.io/kgateway-dev/charts/kgateway-crds
+  url: oci://ghcr.io/kgateway-dev/charts/agentgateway-crds
   ref:
-    tag: "2.3.0-main"
+    tag: "v2.2.1"
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: kgateway-crds
-  namespace: flux-system
+  name: agentgateway-crds
+  namespace: agentgateway-system
 spec:
   interval: 1h
+  releaseName: agentgateway-crds
   chartRef:
     kind: OCIRepository
-    name: kgateway-crds
+    name: agentgateway-crds
+    namespace: flux-system
   install:
+    createNamespace: true
     crds: CreateReplace
