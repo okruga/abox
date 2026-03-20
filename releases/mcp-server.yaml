@@ -1,0 +1,50 @@
+apiVersion: kagent.dev/v1alpha1
+kind: MCPServer
+metadata:
+  name: echo-mcp-server
+  namespace: kagent
+spec:
+  deployment:
+    cmd: npx
+    args:
+      - -y
+      - "@muhtalipdede/echo-mcp-server"
+    port: 3000
+  stdioTransport: {}
+  transportType: stdio
+
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: echo-openai-model
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai-lab
+  apiKeySecretKey: OPENAI_API_KEY
+  provider: OpenAI
+  model: gpt-4o-mini
+---
+
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: echo-agent
+  namespace: kagent
+spec:
+  description: Agent that uses local echo MCP server.
+  type: Declarative
+  declarative:
+    modelConfig: echo-openai-model
+    systemMessage: |-
+      Use the echo MCP tool when the user asks you to echo, repeat, or test text.
+      For normal questions, answer normally.
+      Do not invent tool behavior.
+      Always answer in Markdown.
+    tools:
+      - type: McpServer
+        mcpServer:
+          name: echo-mcp-server
+          kind: MCPServer
+          toolNames:
+            - echo_tool
