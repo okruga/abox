@@ -13,5 +13,5 @@ variable "oci_registry" {
 variable "releases_version" {
   description = "Default tag for releases OCI artifact bootstrap"
   type        = string
-  default     = "0.5.7"
+  default     = "0.5.9"
 }
