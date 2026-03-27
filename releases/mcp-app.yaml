@@ -26,7 +26,7 @@ spec:
       - 0.0.0.0
       - --port
       - "3000"
-    image: ghcr.io/okruga/lab3-mcp-app:tst
+    image: ghcr.io/okruga/lab3-mcp-app:0.0.1
     port: 3000
   httpTransport:
     path: /mcp
