@@ -44,11 +44,7 @@ resource "kubectl_manifest" "rsip" {
       annotations:
         fluxcd.controlplane.io/reconcileEvery: 5m
     spec:
-      type: OCIArtifactTag
-      url: ${var.oci_registry}/releases
-      filter:
-        includeTag: "^\\d+\\.\\d+\\.\\d+$"
-        limit: 1
+      type: Static
       defaultValues:
         tag: "${var.releases_version}"
   YAML
