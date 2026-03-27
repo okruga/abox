@@ -12,7 +12,6 @@ metadata:
     app.kubernetes.io/part-of: kmcp
     kmcp.dev/framework: fastmcp-python
     kmcp.dev/version: 0.1.0
-    kagent.dev/discovery: "disabled"
   name: text-normalizer-mcp2
   namespace: kagent
 spec:
@@ -27,6 +26,7 @@ spec:
       - --port
       - "3000"
     image: ghcr.io/okruga/lab3-mcp-app:0.0.1
+    imagePullPolicy: Always
     port: 3000
   httpTransport:
     path: /mcp
